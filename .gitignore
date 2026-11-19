@@ -1,0 +1,6 @@
+node_modules/
+dist/
+.haunt-runs/
+*.log
+.DS_Store
+# NOTE: never ignore /.kiro — it is required for Kiroween judging.
