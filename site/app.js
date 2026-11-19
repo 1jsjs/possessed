@@ -1,5 +1,7 @@
 // Possessed results site — reads data/index.json, data/houses.json and data/runs/<id>.json.
 
+import { housePlan } from "./house.js?v=9";
+
 const LAYOUTS = {
   "repo-house": { cols: 4, areas: ['"shrine attic attic study"', '"hall mirror kitchen kitchen"', '"hall basement rafters well"'] },
   "web-house": { cols: 3, areas: ['"chimney attic attic"', '"hall mirror mirror"', '"hall well well"'] },
@@ -142,6 +144,9 @@ function renderPlans(house, defenses) {
         el("span", { class: "count" }, run ? String(run.report.possessedCount) : "–"),
         el("span", { class: "of" }, run ? `of ${run.report.totalRooms} rooms possessed` : "no run"),
         el("span", { class: `def ${defense}` }, DEFENSE_NAME[defense] ?? defense)),
+      // the surveyed house on wide screens, a plain list of rooms on phones
+      housePlan(house, Object.fromEntries(house.rooms.map((r) => [r.id, LOOK[outcome(run, r.id)] ?? LOOK.unknown])), state.room,
+        (id) => { state.room = id; render(); }, { compact: defenses.length > 1 }),
       el("div", { class: "plan", style }, house.rooms.map((room) => roomTile(room, run, layout))));
   }));
 }

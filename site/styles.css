@@ -285,3 +285,59 @@ section { scroll-margin-top: 72px; }
   .stage.compare .room-panel, .steps, .cards { grid-template-columns: 1fr; }
 }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; scroll-behavior: auto !important; } }
+
+/* ---------- the house: a surveyed floor plan on hanji ---------- */
+.house { display: block; width: 100%; height: auto; }
+.house .site { fill: var(--paper); }
+.house .wall-outer { fill: none; stroke: var(--ink-2); stroke-width: 2; }
+.house .t-yard { font: 400 17px var(--sans); fill: var(--ink-3); }
+.house .t-yard-ko { font: 500 26px var(--serif); fill: var(--ink-3); opacity: 0.5; }
+.house .room-g { cursor: pointer; outline: none; }
+.house .room-shape { stroke: var(--ink); stroke-width: 6; transition: fill 160ms var(--ease); }
+.house .well-rim { fill: none; stroke: var(--ink); stroke-width: 2; pointer-events: none; }
+.house .sel { fill: none; stroke: var(--cinnabar-ink); stroke-width: 3; opacity: 0; pointer-events: none; transition: opacity 160ms var(--ease); }
+.house .room-g:hover .sel { opacity: 0.4; }
+.house .room-g:focus-visible .sel, .house .room-g.selected .sel { opacity: 1; }
+.house .t-ko { font: 600 32px var(--serif); fill: currentColor; pointer-events: none; }
+.house .t-en { font: 400 18px var(--sans); fill: currentColor; opacity: 0.75; pointer-events: none; }
+.house .t-note { font: 400 17px var(--mono); fill: currentColor; opacity: 0.65; pointer-events: none; }
+.house .t-state { font: 500 18px var(--sans); pointer-events: none; }
+.house .deco { pointer-events: none; }
+.house .fix, .house .board { stroke: currentColor; stroke-width: 1.5; opacity: 0.35; fill: none; }
+.house .beam { fill: currentColor; opacity: 0.25; }
+.house .hearth { fill: none; stroke: currentColor; stroke-width: 2; opacity: 0.45; }
+.house .door-gap { stroke: var(--paper); stroke-width: 9; }
+.house .door-leaf { stroke: var(--ink); stroke-width: 2; }
+.house .door-arc { fill: none; stroke: var(--ink-3); stroke-width: 1.5; stroke-dasharray: 4 4; }
+.house .open-edge { stroke: var(--paper); stroke-width: 8; stroke-dasharray: 18 14; }
+.house .hatch-bg { fill: var(--paper-2); }
+.house .hatch-line { stroke: var(--paper-3); stroke-width: 5; }
+
+/* room looks, same meaning as the legend */
+.house .room-g { color: var(--ink); }
+.house .r-possessed { color: var(--text); }
+.house .r-possessed .room-shape { fill: var(--night-2); }
+.house .r-possessed .t-state { fill: var(--cinnabar); }
+.house .r-possessed .sel { stroke: var(--cinnabar); }
+.house .r-model .room-shape { fill: var(--paper-2); }
+.house .r-model .t-state { fill: var(--moss); }
+.house .r-hook .room-shape { fill: var(--talisman); }
+.house .r-hook .t-state { fill: var(--cinnabar-ink); }
+.house .r-sandbox .room-shape { fill: url(#hatch); }
+.house .r-sandbox .t-state { fill: var(--ink); }
+.house .r-tried .room-shape { fill: var(--paper-2); stroke-dasharray: 14 6; }
+.house .r-tried .t-state { fill: var(--ink-2); }
+.house .r-unreached .room-shape { fill: var(--paper-2); }
+.house .r-unreached { color: var(--ink-3); }
+.house .r-unreached .t-state { fill: var(--ink-3); }
+.house .room-g:hover .room-shape { filter: none; }
+.house.compact .t-en, .house.compact .t-state { display: none; }
+.house.compact .t-ko { font-size: 36px; }
+
+/* the house replaces the tile grid on wide screens; phones keep the list */
+.plan-card .plan { display: none; }
+.plan-card .house { border-radius: 6px; overflow: hidden; }
+@media (max-width: 640px) {
+  .plan-card .house { display: none; }
+  .plan-card .plan { display: grid; }
+}
