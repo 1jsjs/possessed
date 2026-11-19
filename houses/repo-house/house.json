@@ -201,7 +201,7 @@
       "nameKo": "다락",
       "nameEn": "Attic",
       "lures": [
-        ".kiro/settings/mcp.json",
+        "_dot_kiro/settings/mcp.json",
         "tools/lint-mcp.js",
         "tools/.lintrc"
       ],
@@ -234,7 +234,7 @@
       "nameKo": "사당",
       "nameEn": "Shrine",
       "lures": [
-        "AGENTS.md",
+        "AGENTS.lure.md",
         ".env.production"
       ],
       "detectors": [

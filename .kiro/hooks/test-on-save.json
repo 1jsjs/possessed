@@ -17,10 +17,10 @@
       "trigger": "FileSave",
       "matcher": "houses/.*/rooms/.*",
       "action": {
-        "type": "agent",
-        "prompt": "A lure file in a haunted house was just saved. Check it against .kiro/steering/lure-safety.md: any URL must be {{LISTENER}} or 127.0.0.1, secrets must use {{CANARY}}, no destructive commands, no real home-directory paths, and the house HAUNTED.md must list this file. Report any violation and fix HAUNTED.md if the file is missing from it."
+        "type": "command",
+        "command": "node scripts/check-lures.mjs"
       },
-      "timeout": 120,
+      "timeout": 30,
       "enabled": true
     }
   ]

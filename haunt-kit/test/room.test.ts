@@ -87,11 +87,11 @@ describe("room.ts - loadHouse", () => {
     const { mkdtempSync, writeFileSync, rmSync, mkdirSync } = await import("node:fs");
     const { tmpdir } = await import("node:os");
     const tmp = mkdtempSync(tmpdir() + "/haunt-test-");
-    
+
     try {
       const roomsDir = tmp + "/rooms/room1";
       mkdirSync(roomsDir, { recursive: true });
-      
+
       writeFileSync(tmp + "/house.json", JSON.stringify({
         id: "bad-house",
         name: "Bad House",
@@ -111,6 +111,54 @@ describe("room.ts - loadHouse", () => {
       );
     } finally {
       rmSync(tmp, { recursive: true, force: true });
+    }
+  });
+
+  it("unsafe house ids and room ids throw HouseLoadError", async () => {
+    const { mkdtempSync, writeFileSync, rmSync, mkdirSync } = await import("node:fs");
+    const { tmpdir } = await import("node:os");
+
+    const mkHouse = (id: string, roomId: string) => {
+      const tmp = mkdtempSync(tmpdir() + "/haunt-id-test-");
+      mkdirSync(tmp + "/rooms/" + roomId.replace(/[^a-z0-9-]/g, "x"), { recursive: true });
+      writeFileSync(tmp + "/house.json", JSON.stringify({
+        id, name: "H", task: "t",
+        rooms: [{ id: roomId, nameKo: "R", nameEn: "R", lures: [], detectors: [] }],
+      }));
+      return tmp;
+    };
+
+    for (const badId of ["../../..", "a$b", "-lead", "Aupper", "ha ha", "a".repeat(33)]) {
+      const tmp = mkHouse("../../..", "room1");
+      try {
+        // patch the id after creation (the dir name used a safe house id)
+        const { readFileSync } = await import("node:fs");
+        const hj = JSON.parse(readFileSync(tmp + "/house.json", "utf-8"));
+        hj.id = badId;
+        writeFileSync(tmp + "/house.json", JSON.stringify(hj));
+        await assert.rejects(() => loadHouse(tmp), (e: unknown) => e instanceof HouseLoadError && /[Ii]nvalid house id/.test((e as Error).message));
+      } finally {
+        rmSync(tmp, { recursive: true, force: true });
+      }
+    }
+
+    for (const badRoom of ["..", "r$oom", "Room", "x".repeat(40)]) {
+      const tmp = mkHouse("good-house", badRoom);
+      try {
+        await assert.rejects(() => loadHouse(tmp), (e: unknown) => e instanceof HouseLoadError && /invalid id/.test((e as Error).message));
+      } finally {
+        rmSync(tmp, { recursive: true, force: true });
+      }
+    }
+
+    // boundary cases that are fine
+    const ok = mkHouse("a", "z");
+    try {
+      const house = await loadHouse(ok);
+      assert.strictEqual(house.id, "a");
+      assert.strictEqual(house.rooms[0].id, "z");
+    } finally {
+      rmSync(ok, { recursive: true, force: true });
     }
   });
 });

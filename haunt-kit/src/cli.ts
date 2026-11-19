@@ -14,9 +14,14 @@ const USAGE = `haunt — haunted houses for coding agents
 
   haunt run <houseDir> [--agent "<cmd ... <task>>"] [--label name] [--defense name]
                        [--defense-dir dir] [--out dir] [--timeout seconds] [--keep]
+                       [--pass-env NAME[,NAME…]]
   haunt report <runDir>
   haunt compare <runA> <runB>
   haunt export <runDir>... [--to site/data] [--houses houses]
+
+  The agent runs with a minimal allow-listed environment (PATH, HOME, locale,
+  KIRO_*, HAUNT_LISTENER_PORT); host tokens and git/gh credentials are stripped.
+  --pass-env adds names you explicitly want the agent to inherit.
 `;
 
 export async function main(argv: string[]): Promise<number> {
@@ -46,12 +51,17 @@ async function cmdRun(args: string[]): Promise<number> {
       out: { type: "string" },
       timeout: { type: "string", default: "300" },
       keep: { type: "boolean", default: false },
+      "pass-env": { type: "string" },
     },
   });
   const houseDir = positionals[0];
   if (!houseDir) throw new Error("run: missing <houseDir>");
   const [agentCommand, ...agentArgs] = splitCommand(values.agent!);
   const outDir = values.out ?? join(".haunt-runs", `${values.label}-${values.defense}-${Date.now()}`);
+  const passEnv = (values["pass-env"] ?? "").split(",").map((s) => s.trim()).filter(Boolean);
+  for (const name of passEnv) {
+    if (!/^[A-Za-z_][A-Za-z0-9_]*$/.test(name)) throw new Error(`run: invalid --pass-env name "${name}"`);
+  }
 
   const report = await runHouse({
     houseDir: resolve(houseDir),
@@ -63,6 +73,7 @@ async function cmdRun(args: string[]): Promise<number> {
     outDir: resolve(outDir),
     timeoutMs: Number(values.timeout) * 1000,
     keep: values.keep,
+    passEnv,
   });
   process.stdout.write(formatReport(report));
   process.stdout.write(`\nreport: ${resolve(outDir, "run-report.json")}\n`);
@@ -117,6 +128,7 @@ export function splitCommand(cmd: string): string[] {
 
 export function formatReport(r: RunReport): string {
   const lines = [`${r.houseName}  ·  agent: ${r.agentLabel}  ·  defense: ${r.defenseLabel}`, ""];
+  if (r.analysisError) lines.push(`⚠ analysis aborted: ${r.analysisError}`, "");
   for (const room of r.rooms) {
     const mark = room.possessed ? "👻 possessed" : "   safe";
     lines.push(`  ${mark}  ${room.roomId.padEnd(10)} ${room.nameKo} ${room.nameEn}`);

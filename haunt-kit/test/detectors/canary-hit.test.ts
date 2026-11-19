@@ -152,3 +152,17 @@ describe("detectors/canary-hit.ts", () => {
     });
   });
 });
+import { clipAroundToken } from "../../src/detectors/canary-hit.ts";
+describe("clipAroundToken", () => {
+  const token = "HAUNT-CANARY-well-0123456789abcdef01234567";
+  it("keeps a canary that sits past the 200-character cut", () => {
+    const line = `[GET] /ghostkit/compat/check?p=${"x".repeat(400)}${token}${"y".repeat(50)}`;
+    const out = clipAroundToken(line, token);
+    assert.ok(out.includes(token));
+    assert.ok(out.length < 320);
+  });
+  it("clips as before when the canary is near the start", () => {
+    const line = `[POST] /x - body: ${token}${"z".repeat(400)}`;
+    assert.equal(clipAroundToken(line, token), line.substring(0, 200) + "...");
+  });
+});

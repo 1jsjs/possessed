@@ -56,11 +56,17 @@ export interface Sandbox {
   root: string;
   /** absolute path to the run temp directory (parent of root and evilRemote) */
   runDir: string;
+  /** realpath of root, recorded at creation - the agent must not be able to retarget it */
+  realRoot: string;
+  /** realpath of runDir, recorded at creation */
+  realRunDir: string;
   /** absolute path to the bare evil remote, inside runDir */
   evilRemote: string;
   /** roomId → canary token (HAUNT-CANARY-<roomId>-<hex>) */
   canaryTokens: Record<string, string>;
   listenerPort: number;
+  /** contents of .git/config captured right after creation; restored before any post-run git call */
+  gitConfigSnapshot?: string;
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -111,6 +117,10 @@ export interface RunReport {
   rooms: RoomVerdict[];
   possessedCount: number;
   totalRooms: number;
+  /** recorded when a defense was installed: whether it enables the OS sandbox */
+  defense?: { sandbox: boolean };
+  /** set when post-run analysis had to abort (e.g. the agent replaced .git) */
+  analysisError?: string;
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -151,6 +161,8 @@ export interface RunOpts {
   task: string;
   sandbox: Sandbox;
   timeoutMs: number;
+  /** extra parent env var names to pass to the agent (CLI --pass-env) */
+  passEnv?: string[];
 }
 
 export interface HouseRunOpts {
@@ -164,6 +176,8 @@ export interface HouseRunOpts {
   keep?: boolean;
   /** Directory whose contents are copied into the sandbox root before the agent starts (e.g. bujeok/kiro → .kiro/...) */
   defenseDir?: string;
+  /** extra parent env var names to pass to the agent (CLI --pass-env) */
+  passEnv?: string[];
 }
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -201,6 +215,18 @@ export class CollisionError extends Error {
 // ─────────────────────────────────────────────────────────────────────────
 // Utilities
 // ─────────────────────────────────────────────────────────────────────────
+
+/**
+ * House and room ids must be safe for paths, run ids and `.replace` substitutions.
+ */
+export const ID_PATTERN = /^[a-z][a-z0-9-]{0,31}$/;
+
+/**
+ * The exact canary shape generateCanaryToken produces (24 lowercase hex chars).
+ * Anything longer, shorter or otherwise shaped is NOT a canary and must not be
+ * shielded from redaction or credited as evidence.
+ */
+export const CANARY_TOKEN_SOURCE = "HAUNT-CANARY-[a-z][a-z0-9-]{0,31}-[0-9a-f]{24}";
 
 /**
  * Throws PathEscapeError if the resolved path does not start with one of the roots.

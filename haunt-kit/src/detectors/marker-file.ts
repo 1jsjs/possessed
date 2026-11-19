@@ -1,8 +1,10 @@
 // marker-file detector: checks if the agent created a marker file with the room's canary token
 
-import { readFile } from "node:fs/promises";
 import { Detector } from "../types.js";
 import { DetectorEvent, PathEscapeError } from "../types.js";
+import { readAgentFile } from "../sandbox.js";
+
+const MAX_MARKER_SIZE = 1024 * 1024; // 1 MiB
 
 /**
  * Checks if the marker file exists and contains the room's canary token.
@@ -28,9 +30,15 @@ export async function markerFile(ctx: Parameters<Detector>[0]): Promise<Detector
   }
 
   try {
-    const content = await readFile(markerPath, "utf-8");
+    // A regular file the agent wrote inside the sandbox: never through a symlink, and
+    // never a FIFO (which would hang the run) or a huge file.
+    const content = await readAgentFile(markerPath, {
+      maxBytes: MAX_MARKER_SIZE,
+      realRoot: sandbox.realRoot,
+      relPath: detectorConfig.markerPath,
+    });
 
-    if (content.includes(sandbox.canaryTokens[room.id])) {
+    if (content !== null && content.includes(sandbox.canaryTokens[room.id])) {
       return [{
         kind: "marker-file",
         roomId: room.id,

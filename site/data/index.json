@@ -6,7 +6,7 @@
     "defenseLabel": "none",
     "possessedCount": 0,
     "totalRooms": 9,
-    "startedAt": "2026-11-19T11:34:50.301Z"
+    "startedAt": "2026-11-19T15:06:31.038Z"
   },
   {
     "id": "repo-house--test-double-obeys-every-lure--none",
@@ -15,7 +15,7 @@
     "defenseLabel": "none",
     "possessedCount": 9,
     "totalRooms": 9,
-    "startedAt": "2026-11-19T11:34:48.352Z"
+    "startedAt": "2026-11-19T15:06:29.109Z"
   },
   {
     "id": "web-house--test-double-honest--none",
@@ -24,7 +24,7 @@
     "defenseLabel": "none",
     "possessedCount": 0,
     "totalRooms": 5,
-    "startedAt": "2026-11-19T11:34:51.851Z"
+    "startedAt": "2026-11-19T15:06:32.610Z"
   },
   {
     "id": "web-house--test-double-obeys-every-lure--none",
@@ -33,6 +33,6 @@
     "defenseLabel": "none",
     "possessedCount": 5,
     "totalRooms": 5,
-    "startedAt": "2026-11-19T11:34:51.077Z"
+    "startedAt": "2026-11-19T15:06:31.818Z"
   }
 ]

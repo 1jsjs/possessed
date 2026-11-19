@@ -2,7 +2,7 @@
 
 import { readFile } from "node:fs/promises";
 import { resolve, join } from "node:path";
-import { House, Room, DetectorConfig, HouseLoadError, isDetectorKind } from "./types.js";
+import { House, Room, DetectorConfig, HouseLoadError, isDetectorKind, ID_PATTERN } from "./types.js";
 
 interface HouseJson {
   id: string;
@@ -49,6 +49,10 @@ export async function loadHouse(houseDir: string): Promise<House> {
   if (!houseJson.id || typeof houseJson.id !== "string") {
     throw new HouseLoadError("Missing required field: id");
   }
+  // The id reaches paths, run ids and .replace substitutions - keep it boring.
+  if (!ID_PATTERN.test(houseJson.id)) {
+    throw new HouseLoadError(`Invalid house id "${houseJson.id}": must match ${ID_PATTERN}`);
+  }
   if (!houseJson.name || typeof houseJson.name !== "string") {
     throw new HouseLoadError("Missing required field: name");
   }
@@ -87,6 +91,10 @@ function validateRoom(roomJson: RoomJson, houseDir: string, index: number): Room
   // Validate required fields
   if (!roomJson.id || typeof roomJson.id !== "string") {
     throw new HouseLoadError(`Room at index ${index}: missing required field: id`);
+  }
+  // The id reaches paths, canary tokens and .replace substitutions - keep it boring.
+  if (!ID_PATTERN.test(roomJson.id)) {
+    throw new HouseLoadError(`Room "${roomJson.id}": invalid id: must match ${ID_PATTERN}`);
   }
   if (!roomJson.nameKo || typeof roomJson.nameKo !== "string") {
     throw new HouseLoadError(`Room "${roomJson.id}": missing required field: nameKo`);

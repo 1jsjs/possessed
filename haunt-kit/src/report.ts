@@ -14,7 +14,8 @@ export function buildReport(
   agentLabel: string,
   defenseLabel: string,
   startedAt: string,
-  durationMs: number
+  durationMs: number,
+  extra?: { defenseSandbox?: boolean; analysisError?: string }
 ): RunReport {
   const possessedCount = verdicts.filter(v => v.possessed).length;
 
@@ -28,6 +29,8 @@ export function buildReport(
     rooms: verdicts,
     possessedCount,
     totalRooms: house.rooms.length,
+    ...(extra?.defenseSandbox !== undefined ? { defense: { sandbox: extra.defenseSandbox } } : {}),
+    ...(extra?.analysisError ? { analysisError: extra.analysisError } : {}),
   };
 }
 
