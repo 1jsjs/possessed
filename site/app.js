@@ -1,6 +1,6 @@
 // Possessed results site — reads data/index.json, data/houses.json and data/runs/<id>.json.
 
-import { housePlan } from "./house.js?v=10";
+import { housePlan } from "./house.js?v=13";
 
 const LAYOUTS = {
   "repo-house": { cols: 4, areas: ['"shrine attic attic study"', '"hall mirror kitchen kitchen"', '"hall basement rafters well"'] },
