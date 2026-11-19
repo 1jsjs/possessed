@@ -6,74 +6,74 @@ Tasks are ordered so that each step compiles and passes tests before the next be
 
 ## 1. Project scaffold
 
-- [ ] 1.1 Create `haunt-kit/` directory with `package.json` (name `"haunt-kit"`, `"type": "module"`, `"exports"`, `"bin": { "haunt": "./dist/cli.js" }`).
-- [ ] 1.2 Add `tsconfig.json` (`strict: true`, `target: ES2023`, `module: NodeNext`, `outDir: dist`, `rootDir: src`).
-- [ ] 1.3 Add `haunt-kit` as a workspace in the root `package.json`.
-- [ ] 1.4 Add `fast-check` and `tsx` as dev dependencies; add `typescript` as a dev dependency.
-- [ ] 1.5 Add `npm run build` (`tsc -p tsconfig.json`) and `npm test` (`node --test`) scripts.
+- [x] 1.1 Create `haunt-kit/` directory with `package.json` (name `"haunt-kit"`, `"type": "module"`, `"exports"`, `"bin": { "haunt": "./dist/cli.js" }`).
+- [x] 1.2 Add `tsconfig.json` (`strict: true`, `target: ES2023`, `module: NodeNext`, `outDir: dist`, `rootDir: src`).
+- [x] 1.3 Add `haunt-kit` as a workspace in the root `package.json`.
+- [x] 1.4 Add `fast-check` and `tsx` as dev dependencies; add `typescript` as a dev dependency.
+- [x] 1.5 Add `npm run build` (`tsc -p tsconfig.json`) and `npm test` (`node --test`) scripts.
 
 ---
 
 ## 2. Types and shared utilities (`src/types.ts`, `src/utils.ts`)
 
-- [ ] 2.1 Define and export all interfaces from the design data model: `House`, `Room`, `DetectorConfig`, `DetectorKind`, `Sandbox`, `CanaryHit`, `DetectorEvent`, `RoomVerdict`, `RunReport`, `AgentResult`, `DetectionContext`. *(design §2)*
-- [ ] 2.2 Define and export custom error classes: `HouseLoadError`, `PathEscapeError`, `AgentSpawnError`, `CollisionError`. *(design §6)*
-- [ ] 2.3 Implement `assertUnderRoot(resolvedPath: string, ...roots: string[]): void` — throws `PathEscapeError` for any path that does not start with one of the roots. *(req 11.1, design §5)*
-- [ ] 2.4 Implement `generateCanaryToken(roomId: string): string` — returns `HAUNT-CANARY-<roomId>-<16+ hex chars>` using `node:crypto`. *(req 2.4)*
-- [ ] 2.5 **Tests** (`test/utils.test.ts`):
-  - [ ] 2.5.1 Property test (fast-check): `assertUnderRoot` never throws for paths starting with a root, always throws for paths that do not. *(design §7.6)*
-  - [ ] 2.5.2 Property test: `generateCanaryToken` output always matches `/^HAUNT-CANARY-[a-zA-Z0-9_-]+-[0-9a-f]{16,}$/`. *(design §7.7)*
+- [x] 2.1 Define and export all interfaces from the design data model: `House`, `Room`, `DetectorConfig`, `DetectorKind`, `Sandbox`, `CanaryHit`, `DetectorEvent`, `RoomVerdict`, `RunReport`, `AgentResult`, `DetectionContext`. *(design §2)*
+- [x] 2.2 Define and export custom error classes: `HouseLoadError`, `PathEscapeError`, `AgentSpawnError`, `CollisionError`. *(design §6)*
+- [x] 2.3 Implement `assertUnderRoot(resolvedPath: string, ...roots: string[]): void` — throws `PathEscapeError` for any path that does not start with one of the roots. *(req 11.1, design §5)*
+- [x] 2.4 Implement `generateCanaryToken(roomId: string): string` — returns `HAUNT-CANARY-<roomId>-<16+ hex chars>` using `node:crypto`. *(req 2.4)*
+- [x] 2.5 **Tests** (`test/utils.test.ts`):
+  - [x] 2.5.1 Property test (fast-check): `assertUnderRoot` never throws for paths starting with a root, always throws for paths that do not. *(design §7.6)*
+  - [x] 2.5.2 Property test: `generateCanaryToken` output always matches `/^HAUNT-CANARY-[a-zA-Z0-9_-]+-[0-9a-f]{16,}$/`. *(design §7.7)*
 
 ---
 
 ## 3. House loader (`src/room.ts`)
 
-- [ ] 3.1 Implement `loadHouse(houseDir: string): Promise<House>` — reads `house.json`, validates required fields (`id`, `name`, `task`, `rooms[]`), throws `HouseLoadError` on failure. *(req 1.1, 1.2)*
-- [ ] 3.2 Validate each room entry: required `id`, `nameKo`, `nameEn`, `lures[]`, `detectors[]`; throw `HouseLoadError` if any are missing. *(req 1.1, 1.2)*
-- [ ] 3.3 Validate every `DetectorConfig.kind` against the allowed `DetectorKind` union; throw `HouseLoadError` naming the unknown kind. *(req 1.3)*
-- [ ] 3.4 Validate that every lure path in a room is relative and does not escape `rooms/<roomId>/` (i.e., `path.resolve(roomBase, lure)` starts with `roomBase`); throw `HouseLoadError` on violation. *(req 1.4)*
-- [ ] 3.5 **Tests** (`test/room.test.ts`):
-  - [ ] 3.5.1 Unit: loading a valid `house.json` fixture returns the expected `House` object.
-  - [ ] 3.5.2 Unit: missing `task` field throws `HouseLoadError` with the field name in the message.
-  - [ ] 3.5.3 Unit: unknown detector kind throws `HouseLoadError`.
-  - [ ] 3.5.4 Unit: a lure path with `../` escape throws `HouseLoadError`.
+- [x] 3.1 Implement `loadHouse(houseDir: string): Promise<House>` — reads `house.json`, validates required fields (`id`, `name`, `task`, `rooms[]`), throws `HouseLoadError` on failure. *(req 1.1, 1.2)*
+- [x] 3.2 Validate each room entry: required `id`, `nameKo`, `nameEn`, `lures[]`, `detectors[]`; throw `HouseLoadError` if any are missing. *(req 1.1, 1.2)*
+- [x] 3.3 Validate every `DetectorConfig.kind` against the allowed `DetectorKind` union; throw `HouseLoadError` naming the unknown kind. *(req 1.3)*
+- [x] 3.4 Validate that every lure path in a room is relative and does not escape `rooms/<roomId>/` (i.e., `path.resolve(roomBase, lure)` starts with `roomBase`); throw `HouseLoadError` on violation. *(req 1.4)*
+- [x] 3.5 **Tests** (`test/room.test.ts`):
+  - [x] 3.5.1 Unit: loading a valid `house.json` fixture returns the expected `House` object.
+  - [x] 3.5.2 Unit: missing `task` field throws `HouseLoadError` with the field name in the message.
+  - [x] 3.5.3 Unit: unknown detector kind throws `HouseLoadError`.
+  - [x] 3.5.4 Unit: a lure path with `../` escape throws `HouseLoadError`.
 
 ---
 
 ## 4. Canary listener (`src/listener.ts`)
 
-- [ ] 4.1 Implement `startListener(): Promise<{ port: number; stop(): Promise<CanaryHit[]> }>` using `node:http`. *(req 3.1)*
-- [ ] 4.2 Bind exclusively to `127.0.0.1:0` so the OS assigns a free port. *(req 3.1, 11.3)*
-- [ ] 4.3 On each request, read the body (up to 64 KiB, truncate silently), record a `CanaryHit` with ISO 8601 UTC timestamp. *(req 3.2)*
-- [ ] 4.4 `stop()` closes the server and returns accumulated hits. *(req 3.3)*
-- [ ] 4.5 Respond `200 OK` to every request so agent lures are not blocked waiting for a response.
-- [ ] 4.6 **Tests** (`test/listener.test.ts`):
-  - [ ] 4.6.1 Unit: `startListener()` resolves with a numeric port; a subsequent HTTP POST to that port appears in the hits returned by `stop()`.
-  - [ ] 4.6.2 Property test: the address is always `127.0.0.1`. *(design §7.10)*
-  - [ ] 4.6.3 Unit: a body larger than 64 KiB is truncated to exactly 65536 bytes in the recorded hit.
+- [x] 4.1 Implement `startListener(): Promise<{ port: number; stop(): Promise<CanaryHit[]> }>` using `node:http`. *(req 3.1)*
+- [x] 4.2 Bind exclusively to `127.0.0.1:0` so the OS assigns a free port. *(req 3.1, 11.3)*
+- [x] 4.3 On each request, read the body (up to 64 KiB, truncate silently), record a `CanaryHit` with ISO 8601 UTC timestamp. *(req 3.2)*
+- [x] 4.4 `stop()` closes the server and returns accumulated hits. *(req 3.3)*
+- [x] 4.5 Respond `200 OK` to every request so agent lures are not blocked waiting for a response.
+- [x] 4.6 **Tests** (`test/listener.test.ts`):
+  - [x] 4.6.1 Unit: `startListener()` resolves with a numeric port; a subsequent HTTP POST to that port appears in the hits returned by `stop()`.
+  - [x] 4.6.2 Property test: the address is always `127.0.0.1`. *(design §7.10)*
+  - [x] 4.6.3 Unit: a body larger than 64 KiB is truncated to exactly 65536 bytes in the recorded hit.
 
 ---
 
 ## 5. Sandbox (`src/sandbox.ts`)
 
-- [ ] 5.1 Implement `createSandbox(house: House, houseDir: string, listenerPort: number): Promise<Sandbox>`. *(req 2.1–2.6)*
-- [ ] 5.2 Create a temporary directory with `node:os` `mkdtemp`; create `<tmp>/work/` as the sandbox root. Do not create a fake HOME directory. *(req 2.1)*
-- [ ] 5.3 Before writing any files, build a complete map of `(source → sandboxPath)` for all files in `base/` (if present) and all rooms. If any two sources resolve to the same sandbox root path, throw `CollisionError` naming both sources. *(req 1.5)*
-- [ ] 5.4 If `<houseDir>/base/` exists, copy its entire contents into the sandbox root, replacing `{{LISTENER}}` with `http://127.0.0.1:<listenerPort>` in every file. Leave any `{{CANARY}}` placeholder in base files as-is and log a warning. *(req 2.1, 2.2)*
-- [ ] 5.5 For each room in declaration order, copy the contents of `<houseDir>/rooms/<roomId>/` into the sandbox root (merging into the root, not into a `<roomId>/` subdirectory), replacing both `{{LISTENER}}` and `{{CANARY}}` (substituting that room's canary token) in a single pass through each file's content. *(req 2.1, 2.2, 2.4)*
-- [ ] 5.6 Call `assertUnderRoot(resolvedPath, sandbox.runDir)` on every resolved destination path before writing. *(req 2.7, 11.1)*
-- [ ] 5.7 Run `git init && git add -A && git commit -m "initial"` inside the sandbox root using `child_process.execFile`. *(req 2.3)*
-- [ ] 5.8 Create the evil bare repo at `<tmp>/evil-remote.git` via `git init --bare`, then run `git remote add evil <path>` in the sandbox root. The evil remote is inside `runDir` but outside the sandbox working tree. *(req 2.5)*
-- [ ] 5.9 Return the `Sandbox` object with `root` (`<tmp>/work`), `runDir` (`<tmp>`), `evilRemote` (`<tmp>/evil-remote.git`), `canaryTokens`, and `listenerPort`. Do not include a `fakeHome` field. *(req 2.6)*
-- [ ] 5.10 Implement `teardown(sandbox: Sandbox, keep: boolean): Promise<void>` — if `keep` is `false`, removes `sandbox.runDir` recursively using `node:fs/promises` `rm` with `{ recursive: true, force: true }`; if `keep` is `true`, logs the `runDir` path to stdout instead. *(req 11.5, 8.7)*
-- [ ] 5.11 **Tests** (`test/sandbox.test.ts`):
-  - [ ] 5.11.1 Unit: after `createSandbox`, each room's lure files exist directly under `sandbox.root` (not under a `<roomId>/` subdirectory), with `{{LISTENER}}` and `{{CANARY}}` both replaced.
-  - [ ] 5.11.2 Unit: if `base/` exists, its files appear in `sandbox.root` before room files are merged.
-  - [ ] 5.11.3 Unit: two rooms providing the same filename throw `CollisionError` before any files are written.
-  - [ ] 5.11.4 Unit: `sandbox.root` is a git repo with exactly one commit; `sandbox.evilRemote` is registered as remote `evil`.
-  - [ ] 5.11.5 Unit: `sandbox` has no `fakeHome` field; `sandbox.runDir` is the parent of both `sandbox.root` and `sandbox.evilRemote`.
-  - [ ] 5.11.6 Unit: `teardown(sandbox, false)` removes the temp directory entirely; `teardown(sandbox, true)` leaves it in place.
-  - [ ] 5.11.7 Unit: a lure file attempting path traversal (crafted directly, bypassing `loadHouse`) triggers `PathEscapeError`.
+- [x] 5.1 Implement `createSandbox(house: House, houseDir: string, listenerPort: number): Promise<Sandbox>`. *(req 2.1–2.6)*
+- [x] 5.2 Create a temporary directory with `node:os` `mkdtemp`; create `<tmp>/work/` as the sandbox root. Do not create a fake HOME directory. *(req 2.1)*
+- [x] 5.3 Before writing any files, build a complete map of `(source → sandboxPath)` for all files in `base/` (if present) and all rooms. If any two sources resolve to the same sandbox root path, throw `CollisionError` naming both sources. *(req 1.5)*
+- [x] 5.4 If `<houseDir>/base/` exists, copy its entire contents into the sandbox root, replacing `{{LISTENER}}` with `http://127.0.0.1:<listenerPort>` in every file. Leave any `{{CANARY}}` placeholder in base files as-is and log a warning. *(req 2.1, 2.2)*
+- [x] 5.5 For each room in declaration order, copy the contents of `<houseDir>/rooms/<roomId>/` into the sandbox root (merging into the root, not into a `<roomId>/` subdirectory), replacing both `{{LISTENER}}` and `{{CANARY}}` (substituting that room's canary token) in a single pass through each file's content. *(req 2.1, 2.2, 2.4)*
+- [x] 5.6 Call `assertUnderRoot(resolvedPath, sandbox.runDir)` on every resolved destination path before writing. *(req 2.7, 11.1)*
+- [x] 5.7 Run `git init && git add -A && git commit -m "initial"` inside the sandbox root using `child_process.execFile`. *(req 2.3)*
+- [x] 5.8 Create the evil bare repo at `<tmp>/evil-remote.git` via `git init --bare`, then run `git remote add evil <path>` in the sandbox root. The evil remote is inside `runDir` but outside the sandbox working tree. *(req 2.5)*
+- [x] 5.9 Return the `Sandbox` object with `root` (`<tmp>/work`), `runDir` (`<tmp>`), `evilRemote` (`<tmp>/evil-remote.git`), `canaryTokens`, and `listenerPort`. Do not include a `fakeHome` field. *(req 2.6)*
+- [x] 5.10 Implement `teardown(sandbox: Sandbox, keep: boolean): Promise<void>` — if `keep` is `false`, removes `sandbox.runDir` recursively using `node:fs/promises` `rm` with `{ recursive: true, force: true }`; if `keep` is `true`, logs the `runDir` path to stdout instead. *(req 11.5, 8.7)*
+- [x] 5.11 **Tests** (`test/sandbox.test.ts`):
+  - [x] 5.11.1 Unit: after `createSandbox`, each room's lure files exist directly under `sandbox.root` (not under a `<roomId>/` subdirectory), with `{{LISTENER}}` and `{{CANARY}}` both replaced.
+  - [x] 5.11.2 Unit: if `base/` exists, its files appear in `sandbox.root` before room files are merged.
+  - [x] 5.11.3 Unit: two rooms providing the same filename throw `CollisionError` before any files are written.
+  - [x] 5.11.4 Unit: `sandbox.root` is a git repo with exactly one commit; `sandbox.evilRemote` is registered as remote `evil`.
+  - [x] 5.11.5 Unit: `sandbox` has no `fakeHome` field; `sandbox.runDir` is the parent of both `sandbox.root` and `sandbox.evilRemote`.
+  - [x] 5.11.6 Unit: `teardown(sandbox, false)` removes the temp directory entirely; `teardown(sandbox, true)` leaves it in place.
+  - [x] 5.11.7 Unit: a lure file attempting path traversal (crafted directly, bypassing `loadHouse`) triggers `PathEscapeError`.
 
 ---
 

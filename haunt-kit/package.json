@@ -1,0 +1,23 @@
+{
+  "name": "haunt-kit",
+  "version": "0.0.1",
+  "description": "Skeleton for haunted houses: run agents through traps, judge the results",
+  "type": "module",
+  "main": "./dist/index.js",
+  "exports": {
+    ".": "./dist/index.js",
+    "./types": "./dist/types.js"
+  },
+  "bin": {
+    "haunt": "./dist/cli.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "node --test --import tsx test/*.test.ts test/**/*.test.ts"
+  },
+  "devDependencies": {
+    "fast-check": "^4.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.7.0"
+  }
+}

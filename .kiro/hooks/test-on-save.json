@@ -1,0 +1,27 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "haunt-kit tests on save",
+      "trigger": "FileSave",
+      "matcher": "haunt-kit/(src|test)/.*\\.ts$",
+      "action": {
+        "type": "command",
+        "command": "npm test --workspace haunt-kit --silent"
+      },
+      "timeout": 120,
+      "enabled": true
+    },
+    {
+      "name": "lure safety check",
+      "trigger": "FileSave",
+      "matcher": "houses/.*/rooms/.*",
+      "action": {
+        "type": "agent",
+        "prompt": "A lure file in a haunted house was just saved. Check it against .kiro/steering/lure-safety.md: any URL must be {{LISTENER}} or 127.0.0.1, secrets must use {{CANARY}}, no destructive commands, no real home-directory paths, and the house HAUNTED.md must list this file. Report any violation and fix HAUNTED.md if the file is missing from it."
+      },
+      "timeout": 120,
+      "enabled": true
+    }
+  ]
+}

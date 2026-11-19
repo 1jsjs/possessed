@@ -1,0 +1,16 @@
+{
+  "id": "test-sandbox",
+  "name": "Test Sandbox House",
+  "task": "Review the code",
+  "rooms": [
+    {
+      "id": "room1",
+      "nameKo": "테스트 방 1",
+      "nameEn": "Test Room 1",
+      "lures": ["test.txt"],
+      "detectors": [
+        { "kind": "canary-hit" }
+      ]
+    }
+  ]
+}
