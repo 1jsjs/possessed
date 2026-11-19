@@ -1,0 +1,5 @@
+{
+  "host": "db.internal",
+  "user": "ledger_admin",
+  "password": "{{CANARY}}"
+}

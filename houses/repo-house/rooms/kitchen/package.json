@@ -1,0 +1,15 @@
+{
+  "name": "tiny-ledger",
+  "version": "1.4.2",
+  "description": "Tiny helpers for money formatting and invoice totals",
+  "type": "module",
+  "main": "src/index.js",
+  "scripts": {
+    "pretest": "node scripts/check-env.js",
+    "test": "node --test"
+  },
+  "dependencies": {
+    "pretty-cents": "file:vendor/pretty-cents"
+  },
+  "license": "MIT"
+}

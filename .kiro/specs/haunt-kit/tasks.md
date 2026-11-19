@@ -169,45 +169,45 @@ Tasks are ordered so that each step compiles and passes tests before the next be
 
 ## 11. Runner orchestration (`src/runner.ts` — full pipeline)
 
-- [ ] 11.1 Implement `runHouse(opts: HouseRunOpts): Promise<RunReport>` that chains: `loadHouse` → `startListener` → `createSandbox` → `runAgent` → stop listener → `runDetectors` → `judge` → redact evidence → `buildReport` → `writeReport` → `teardown`. *(req 2.1–7.4, 11.6)*
-- [ ] 11.2 After `judge` returns `RoomVerdict[]`, apply `redact` to every string in every verdict's `evidence` array and to `AgentResult.stdout` and `AgentResult.stderr` before passing them to `buildReport`. *(req 11.6)*
-- [ ] 11.3 Ensure `teardown(sandbox, opts.keep ?? false)` is called in a `finally` block so temp dirs are removed (or kept) even if an error is thrown. *(req 11.5, 8.7)*
-- [ ] 11.4 Pass `HouseRunOpts` fields: `houseDir`, `agentCommand`, `agentArgs`, `agentLabel`, `defenseLabel`, `outDir`, `timeoutMs`, `keep`.
-- [ ] 11.5 Write the final `RunReport` to `outDir` via `writeReport`. *(req 7.1–7.4)*
+- [x] 11.1 Implement `runHouse(opts: HouseRunOpts): Promise<RunReport>` that chains: `loadHouse` → `startListener` → `createSandbox` → `runAgent` → stop listener → `runDetectors` → `judge` → redact evidence → `buildReport` → `writeReport` → `teardown`. *(req 2.1–7.4, 11.6)*
+- [x] 11.2 After `judge` returns `RoomVerdict[]`, apply `redact` to every string in every verdict's `evidence` array and to `AgentResult.stdout` and `AgentResult.stderr` before passing them to `buildReport`. *(req 11.6)*
+- [x] 11.3 Ensure `teardown(sandbox, opts.keep ?? false)` is called in a `finally` block so temp dirs are removed (or kept) even if an error is thrown. *(req 11.5, 8.7)*
+- [x] 11.4 Pass `HouseRunOpts` fields: `houseDir`, `agentCommand`, `agentArgs`, `agentLabel`, `defenseLabel`, `outDir`, `timeoutMs`, `keep`.
+- [x] 11.5 Write the final `RunReport` to `outDir` via `writeReport`. *(req 7.1–7.4)*
 
 ---
 
 ## 12. CLI (`src/cli.ts`)
 
-- [ ] 12.1 Set up `haunt` binary entry point; use `node:util` `parseArgs` for subcommand dispatch. No third-party CLI framework. *(tech.md)*
+- [x] 12.1 Set up `haunt` binary entry point; use `node:util` `parseArgs` for subcommand dispatch. No third-party CLI framework. *(tech.md)*
 
 ### 12.2 `haunt run`
-- [ ] 12.2.1 Parse `<houseDir>`, `--agent`, `--label`, `--defense`, `--out`, `--timeout`, `--keep`. *(req 8.1–8.7)*
-- [ ] 12.2.2 Apply defaults: `--agent` → default kiro-cli command, `--label` → `"unlabeled"`, `--defense` → `"none"`, `--timeout` → `300`, `--keep` → `false`. *(req 8.2–8.4, 8.6, 8.7)*
-- [ ] 12.2.3 Call `runHouse` and exit 0 on success; exit 1 and print to stderr on infrastructure errors. *(req 8.1, 8.5)*
-- [ ] 12.2.4 When `--keep` is set and the run succeeds, print the run temp directory path to stdout. *(req 8.7)*
+- [x] 12.2.1 Parse `<houseDir>`, `--agent`, `--label`, `--defense`, `--out`, `--timeout`, `--keep`. *(req 8.1–8.7)*
+- [x] 12.2.2 Apply defaults: `--agent` → default kiro-cli command, `--label` → `"unlabeled"`, `--defense` → `"none"`, `--timeout` → `300`, `--keep` → `false`. *(req 8.2–8.4, 8.6, 8.7)*
+- [x] 12.2.3 Call `runHouse` and exit 0 on success; exit 1 and print to stderr on infrastructure errors. *(req 8.1, 8.5)*
+- [x] 12.2.4 When `--keep` is set and the run succeeds, print the run temp directory path to stdout. *(req 8.7)*
 
 ### 12.3 `haunt report`
-- [ ] 12.3.1 Parse `<runDir>`; read `run-report.json`; print a room table with id, nameKo, nameEn, possessed (✓/✗); print `Possessed: N/M` summary. *(req 9.1)*
-- [ ] 12.3.2 On missing or invalid report, print a descriptive error to stderr and exit 1. *(req 9.2)*
+- [x] 12.3.1 Parse `<runDir>`; read `run-report.json`; print a room table with id, nameKo, nameEn, possessed (✓/✗); print `Possessed: N/M` summary. *(req 9.1)*
+- [x] 12.3.2 On missing or invalid report, print a descriptive error to stderr and exit 1. *(req 9.2)*
 
 ### 12.4 `haunt compare`
-- [ ] 12.4.1 Parse `<runA>` and `<runB>`; read both reports; print a side-by-side table with run A and run B possessed status per room and a changed/unchanged indicator. *(req 10.1)*
-- [ ] 12.4.2 Include rooms absent from one report, marked `—`. *(req 10.2)*
-- [ ] 12.4.3 Print the agent label and defense label for each run in the header. *(req 10.3)*
+- [x] 12.4.1 Parse `<runA>` and `<runB>`; read both reports; print a side-by-side table with run A and run B possessed status per room and a changed/unchanged indicator. *(req 10.1)*
+- [x] 12.4.2 Include rooms absent from one report, marked `—`. *(req 10.2)*
+- [x] 12.4.3 Print the agent label and defense label for each run in the header. *(req 10.3)*
 
-- [ ] 12.5 **Tests** (`test/cli.test.ts`):
-  - [ ] 12.5.1 Unit: `haunt report` on a valid fixture prints a table containing every room id.
-  - [ ] 12.5.2 Unit: `haunt report` on a missing path exits with code 1 and prints to stderr.
-  - [ ] 12.5.3 Unit: `haunt compare` on two fixtures with differing verdicts shows `changed` for the differing room.
+- [x] 12.5 **Tests** (`test/cli.test.ts`):
+  - [x] 12.5.1 Unit: `haunt report` on a valid fixture prints a table containing every room id.
+  - [x] 12.5.2 Unit: `haunt report` on a missing path exits with code 1 and prints to stderr.
+  - [x] 12.5.3 Unit: `haunt compare` on two fixtures with differing verdicts shows `changed` for the differing room.
 
 ---
 
 ## 13. Integration smoke test
 
-- [ ] 13.1 Create a minimal fixture house `test/fixtures/smoke-house/` with one room containing a marker-file lure (a shell script that `touch`es a file) and a `marker-file` detector. The room's lure files use `{{CANARY}}` and `{{LISTENER}}` placeholders to verify templating. *(req 2.1–2.4, 5.3)*
-- [ ] 13.2 Write an integration test (`test/integration.test.ts`) that runs `runHouse` against the fixture with a trivial agent command (`node -e "require('fs').writeFileSync('<markerPath>', '')"` or similar) and asserts `possessedCount === 1`. *(req 5.3, 6.1, 7.1)*
-- [ ] 13.3 Verify the integration test completes in under 10 seconds and that the temp directory is gone after the run (i.e., `--keep` was not set).
+- [x] 13.1 Create a minimal fixture house `test/fixtures/smoke-house/` with one room containing a marker-file lure (a shell script that `touch`es a file) and a `marker-file` detector. The room's lure files use `{{CANARY}}` and `{{LISTENER}}` placeholders to verify templating. *(req 2.1–2.4, 5.3)*
+- [x] 13.2 Write an integration test (`test/integration.test.ts`) that runs `runHouse` against the fixture with a trivial agent command (`node -e "require('fs').writeFileSync('<markerPath>', '')"` or similar) and asserts `possessedCount === 1`. *(req 5.3, 6.1, 7.1)*
+- [x] 13.3 Verify the integration test completes in under 10 seconds and that the temp directory is gone after the run (i.e., `--keep` was not set).
 
 ---
 

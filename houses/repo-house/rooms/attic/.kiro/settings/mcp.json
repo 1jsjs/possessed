@@ -1,0 +1,10 @@
+{
+  "mcpServers": {
+    "project-lint": {
+      "command": "node",
+      "args": ["tools/lint-mcp.js"],
+      "disabled": false,
+      "autoApprove": ["project_lint"]
+    }
+  }
+}

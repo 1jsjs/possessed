@@ -1,7 +1,9 @@
 // Agent runner and full pipeline orchestration
 
-import { spawn } from "node:child_process";
-import { dirname } from "node:path";
+import { spawn, execFile } from "node:child_process";
+import { cp, mkdir, writeFile } from "node:fs/promises";
+import { promisify } from "node:util";
+import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { loadHouse } from "./room.js";
 import { startListener } from "./listener.js";
@@ -13,6 +15,7 @@ import { buildReport, writeReport } from "./report.js";
 import { AgentResult, RunReport, House, RunOpts, HouseRunOpts, AgentSpawnError, DetectionContext, DetectorEvent, CanaryHit, Sandbox } from "./types.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
+const execFileAsync = promisify(execFile);
 
 /**
  * Runs the agent process and returns its result.
@@ -31,7 +34,10 @@ export async function runAgent(opts: RunOpts): Promise<AgentResult> {
   }
 
   // Build environment - do NOT set/override HOME
-  const env = { ...process.env, HAUNT_LISTENER_PORT: String(sandbox.listenerPort) };
+  const env: NodeJS.ProcessEnv = { ...process.env, HAUNT_LISTENER_PORT: String(sandbox.listenerPort) };
+  // If haunt-kit itself runs under `node --test`, don't let that leak into the agent:
+  // the agent's own `node --test` would silently skip every file.
+  delete env.NODE_TEST_CONTEXT;
 
   return new Promise((resolve, reject) => {
     const startTime = Date.now();
@@ -147,7 +153,8 @@ async function runAllDetectors(
  * Full pipeline: run a house and return the run report.
  */
 export async function runHouse(opts: HouseRunOpts): Promise<RunReport> {
-  const { houseDir, agentCommand, agentArgs, agentLabel, defenseLabel, outDir, timeoutMs, keep } = opts;
+  const { houseDir, agentCommand, agentArgs, agentLabel, defenseLabel, outDir, timeoutMs, keep, defenseDir } = opts;
+  const startedAt = new Date().toISOString();
 
   // 1. Load house
   const house = await loadHouse(houseDir);
@@ -155,6 +162,7 @@ export async function runHouse(opts: HouseRunOpts): Promise<RunReport> {
   // 2. Start listener
   const { port, stop: stopListener } = await startListener();
   const listenerPort = port;
+  let listenerStopped = false;
 
   let sandbox: Sandbox | undefined;
   let agentResult: AgentResult | undefined;
@@ -163,6 +171,12 @@ export async function runHouse(opts: HouseRunOpts): Promise<RunReport> {
   try {
     // 3. Create sandbox
     sandbox = await createSandbox(house, houseDir, listenerPort);
+
+    // 3b. Install the defense (if any) as its own commit, so detectors that diff
+    // against the initial commit never attribute defense files to the agent.
+    if (defenseDir) {
+      await installDefense(defenseDir, sandbox.root);
+    }
 
     // 4. Run agent
     agentResult = await runAgent({
@@ -175,6 +189,7 @@ export async function runHouse(opts: HouseRunOpts): Promise<RunReport> {
 
     // 5. Stop listener
     canaryHits = await stopListener();
+    listenerStopped = true;
 
     // 6. Run detectors
     const events = await runAllDetectors(sandbox, house, agentResult, canaryHits);
@@ -201,19 +216,60 @@ export async function runHouse(opts: HouseRunOpts): Promise<RunReport> {
       redactedVerdicts,
       agentLabel,
       defenseLabel,
-      new Date().toISOString(),
+      startedAt,
       agentResult?.durationMs || 0
     );
 
-    // 10. Write report
+    // 10. Write report plus the evidence the results site replays
     await writeReport(report, outDir);
+    await writeEvidence(outDir, sandbox, redactedAgentResult, canaryHits);
 
     return report;
 
   } finally {
+    if (!listenerStopped) {
+      await stopListener().catch(() => {});
+    }
     // 11. Teardown (in finally so it always runs)
     if (sandbox) {
       await teardown(sandbox, keep ?? false);
     }
+  }
+}
+
+/** Copies a defense directory into the sandbox root and commits it as "install defense". */
+async function installDefense(defenseDir: string, root: string): Promise<void> {
+  await cp(defenseDir, root, { recursive: true });
+  await execFileAsync("git", ["add", "-A"], { cwd: root });
+  await execFileAsync(
+    "git",
+    ["-c", "user.name=haunt-kit", "-c", "user.email=haunt-kit@localhost", "commit", "--allow-empty", "-m", "install defense"],
+    { cwd: root }
+  );
+}
+
+/**
+ * Writes agent.log (redacted transcript), hits.json (redacted listener hits) and
+ * changes.patch (everything the agent changed since the sandbox was prepared).
+ */
+async function writeEvidence(
+  outDir: string,
+  sandbox: Sandbox,
+  agentResult: AgentResult | undefined,
+  canaryHits: CanaryHit[]
+): Promise<void> {
+  await mkdir(outDir, { recursive: true });
+  const transcript = agentResult ? `${agentResult.stdout}\n--- stderr ---\n${agentResult.stderr}` : "";
+  await writeFile(join(outDir, "agent.log"), transcript, "utf-8");
+  const hits = canaryHits.map(h => ({ ...h, body: redact(h.body), query: redact(h.query) }));
+  await writeFile(join(outDir, "hits.json"), JSON.stringify(hits, null, 2) + "\n", "utf-8");
+  try {
+    // HEAD at agent start = last setup commit; include untracked files via intent-to-add
+    await execFileAsync("git", ["add", "-A", "--intent-to-add"], { cwd: sandbox.root });
+    const { stdout: base } = await execFileAsync("git", ["rev-parse", "HEAD"], { cwd: sandbox.root });
+    const { stdout: diff } = await execFileAsync("git", ["diff", base.trim()], { cwd: sandbox.root, maxBuffer: 16 * 1024 * 1024 });
+    await writeFile(join(outDir, "changes.patch"), redact(diff), "utf-8");
+  } catch (e) {
+    console.warn(`[runner] could not write changes.patch: ${(e as Error).message}`);
   }
 }

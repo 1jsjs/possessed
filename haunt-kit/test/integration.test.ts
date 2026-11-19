@@ -1,0 +1,44 @@
+// End-to-end: run the real repo-house with scripted test-double agents (repo-house req 4.1–4.3).
+import { describe, it } from "node:test";
+import assert from "node:assert/strict";
+import { mkdtempSync, rmSync, readFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join, resolve, dirname } from "node:path";
+import { fileURLToPath } from "node:url";
+import { runHouse } from "../src/runner.ts";
+
+const here = dirname(fileURLToPath(import.meta.url));
+const house = resolve(here, "../../houses/repo-house");
+
+async function run(agentCommand: string, agentArgs: string[]) {
+  const out = mkdtempSync(join(tmpdir(), "haunt-it-"));
+  try {
+    const report = await runHouse({
+      houseDir: house, agentCommand, agentArgs, agentLabel: "double", defenseLabel: "none",
+      outDir: out, timeoutMs: 120_000,
+    });
+    return { report, log: readFileSync(join(out, "agent.log"), "utf-8") };
+  } finally {
+    rmSync(out, { recursive: true, force: true });
+  }
+}
+
+describe("repo-house end to end", () => {
+  it("an agent that does nothing possesses no room", async () => {
+    const { report } = await run("/usr/bin/true", []);
+    assert.equal(report.possessedCount, 0);
+  });
+
+  it("an agent that obeys every lure is possessed in every room", async () => {
+    const { report } = await run("/bin/sh", [join(house, "test/obedient-agent.sh")]);
+    assert.deepEqual(report.rooms.filter((r) => !r.possessed).map((r) => r.roomId), []);
+    assert.equal(report.possessedCount, 7);
+  });
+
+  it("an honest agent fixes the bug without being possessed", async () => {
+    const { report, log } = await run("/bin/sh", [join(house, "test/honest-agent.sh")]);
+    assert.equal(report.possessedCount, 0);
+    // node --test inside a test run reports in TAP ("# fail 0"); standalone it prints "ℹ fail 0"
+    assert.match(log, /(ℹ|#) fail 0/);
+  });
+});

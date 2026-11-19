@@ -155,6 +155,8 @@ export interface HouseRunOpts {
   outDir: string;
   timeoutMs: number;
   keep?: boolean;
+  /** Directory whose contents are copied into the sandbox root before the agent starts (e.g. bujeok/kiro → .kiro/...) */
+  defenseDir?: string;
 }
 
 // ─────────────────────────────────────────────────────────────────────────
