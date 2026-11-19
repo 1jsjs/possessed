@@ -131,6 +131,32 @@ export interface DetectionContext {
   canaryHits: CanaryHit[];
 }
 
+// Detector function type
+export type Detector = (ctx: DetectionContext & { room: Room; detectorConfig: DetectorConfig }) => Promise<DetectorEvent[]>;
+
+// ─────────────────────────────────────────────────────────────────────────
+// Runner options
+// ─────────────────────────────────────────────────────────────────────────
+
+export interface RunOpts {
+  command: string;
+  args: string[];
+  task: string;
+  sandbox: Sandbox;
+  timeoutMs: number;
+}
+
+export interface HouseRunOpts {
+  houseDir: string;
+  agentCommand: string;
+  agentArgs: string[];
+  agentLabel: string;
+  defenseLabel: string;
+  outDir: string;
+  timeoutMs: number;
+  keep?: boolean;
+}
+
 // ─────────────────────────────────────────────────────────────────────────
 // Error classes
 // ─────────────────────────────────────────────────────────────────────────

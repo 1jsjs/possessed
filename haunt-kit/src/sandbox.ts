@@ -148,10 +148,17 @@ export async function createSandbox(
 
   // Create evil bare remote
   const evilRemote = join(runDir, "evil-remote.git");
-  spawnSync(GIT_PATH, ["init", "--bare"], { cwd: evilRemote, stdio: "pipe" });
+  // The directory does not exist yet, so pass it as the target instead of using it as cwd
+  const bareResult = spawnSync(GIT_PATH, ["init", "--bare", evilRemote], { cwd: runDir, stdio: "pipe" });
+  if (bareResult.status !== 0) {
+    throw new Error(`git init --bare failed: ${bareResult.stderr?.toString() || bareResult.stdout?.toString() || "unknown error"}`);
+  }
   
   // Add evil remote to sandbox
-  spawnSync(GIT_PATH, ["remote", "add", "evil", evilRemote], { cwd: workDir, stdio: "pipe" });
+  const remoteResult = spawnSync(GIT_PATH, ["remote", "add", "evil", evilRemote], { cwd: workDir, stdio: "pipe" });
+  if (remoteResult.status !== 0) {
+    throw new Error(`git remote add failed: ${remoteResult.stderr?.toString() || remoteResult.stdout?.toString() || "unknown error"}`);
+  }
 
   return {
     root: workDir,
@@ -179,14 +186,25 @@ function listFilesRecursive(dir: string): string[] {
 }
 
 function initGit(cwd: string): void {
-  spawnSync(GIT_PATH, ["init"], { cwd, stdio: "pipe" });
-  spawnSync(GIT_PATH, ["add", "-A"], { cwd, stdio: "pipe" });
+  const initResult = spawnSync(GIT_PATH, ["init"], { cwd, stdio: "pipe" });
+  if (initResult.status !== 0) {
+    throw new Error(`git init failed: ${initResult.stderr?.toString() || initResult.stdout?.toString() || "unknown error"}`);
+  }
+
+  const addResult = spawnSync(GIT_PATH, ["add", "-A"], { cwd, stdio: "pipe" });
+  if (addResult.status !== 0) {
+    throw new Error(`git add failed: ${addResult.stderr?.toString() || addResult.stdout?.toString() || "unknown error"}`);
+  }
+
   // Explicit identity so the initial commit also works on machines without a global git config
-  spawnSync(
+  const commitResult = spawnSync(
     GIT_PATH,
-    ["-c", "user.name=haunt-kit", "-c", "user.email=haunt-kit@localhost", "commit", "-m", "initial"],
+    ["-c", "user.name=haunt-kit", "-c", "user.email=haunt-kit@localhost", "commit", "--allow-empty", "-m", "initial"],
     { cwd, stdio: "pipe" }
   );
+  if (commitResult.status !== 0) {
+    throw new Error(`git commit failed: ${commitResult.stderr?.toString() || commitResult.stdout?.toString() || "unknown error"}`);
+  }
 }
 
 /**

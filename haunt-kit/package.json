@@ -6,7 +6,14 @@
   "main": "./dist/index.js",
   "exports": {
     ".": "./dist/index.js",
-    "./types": "./dist/types.js"
+    "./types": "./dist/types.js",
+    "./room": "./dist/room.js",
+    "./listener": "./dist/listener.js",
+    "./sandbox": "./dist/sandbox.js",
+    "./runner": "./dist/runner.js",
+    "./judge": "./dist/judge.js",
+    "./report": "./dist/report.js",
+    "./redact": "./dist/redact.js"
   },
   "bin": {
     "haunt": "./dist/cli.js"
