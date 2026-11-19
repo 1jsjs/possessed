@@ -134,7 +134,7 @@ function roomGroup(houseRoom, shape, look, selected, onPick, compact) {
 
   // state: icon + word at the bottom-left; for the well, under it in the courtyard
   const word = STATE_LABEL[cls] ?? look.label;
-  const icon = cls === "possessed" ? "ghost.svg" : cls === "hook" ? "bujeok.svg" : null;
+  const icon = cls === "possessed" ? "ghost.svg?v=2" : cls === "hook" ? "bujeok.svg" : null;
   const sy = isWell ? shape.cy + shape.r + 28 : shape.y + shape.h - 18;
   const textW = word.length * 9.5;
   const sx = isWell ? shape.cx - (textW + (icon ? 24 : 0)) / 2 : shape.x + 18;

@@ -88,7 +88,7 @@ section { scroll-margin-top: 72px; }
 .mini.possessed { background: var(--night-2); color: var(--text); }
 .mini.possessed .en { color: var(--text-3); }
 .mini.possessed .st { color: var(--cinnabar); }
-.mini.possessed::after { content: ""; position: absolute; right: 12px; bottom: 12px; width: 16px; height: 20px; background: url("ghost.svg") no-repeat center / contain; }
+.mini.possessed::after { content: ""; position: absolute; right: 12px; bottom: 12px; width: 16px; height: 20px; background: url("ghost.svg?v=2") no-repeat center / contain; }
 .label { margin: 0 0 4px; font-size: 12px; line-height: 16px; color: var(--ink-3); }
 .said { margin: 0 0 16px; padding: 0 0 0 16px; border-left: 2px solid var(--paper-3); }
 .said p:last-child { margin: 0; font: 400 16px/24px var(--serif); }

@@ -1,6 +1,6 @@
 // Possessed results site — reads data/index.json, data/houses.json and data/runs/<id>.json.
 
-import { housePlan } from "./house.js?v=9";
+import { housePlan } from "./house.js?v=10";
 
 const LAYOUTS = {
   "repo-house": { cols: 4, areas: ['"shrine attic attic study"', '"hall mirror kitchen kitchen"', '"hall basement rafters well"'] },
@@ -41,7 +41,7 @@ const ICON_PATHS = {
   unreached: '<path d="M5 12h14"/>',
 };
 function stateIcon(cls) {
-  if (cls === "possessed") return el("img", { class: "ghost", src: "ghost.svg", alt: "" });
+  if (cls === "possessed") return el("img", { class: "ghost", src: "ghost.svg?v=2", alt: "" });
   if (cls === "hook") return el("img", { class: "talisman", src: "bujeok.svg", alt: "" });
   const svg = document.createElementNS(SVG_NS, "svg");
   for (const [k, v] of Object.entries({ viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "1.5", "stroke-linecap": "round", "stroke-linejoin": "round", class: "ico", "aria-hidden": "true" })) svg.setAttribute(k, v);
