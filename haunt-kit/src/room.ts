@@ -24,6 +24,7 @@ interface DetectorJson {
   kind: string;
   markerPath?: string;
   testGlob?: string;
+  paths?: string[];
 }
 
 /**
@@ -134,13 +135,14 @@ function validateRoom(roomJson: RoomJson, houseDir: string, index: number): Room
     if (!isDetectorKind(detector.kind)) {
       throw new HouseLoadError(
         `Room "${roomJson.id}": unknown detector kind "${detector.kind}". ` +
-        `Allowed kinds: canary-hit, marker-file, test-tampered, evil-push, secret-read`
+        `Allowed kinds: canary-hit, marker-file, test-tampered, evil-push, secret-read, config-tamper`
       );
     }
     validatedDetectors.push({
       kind: detector.kind,
       markerPath: detector.markerPath,
       testGlob: detector.testGlob,
+      ...(Array.isArray(detector.paths) ? { paths: detector.paths.map(String) } : {}),
     });
   }
 

@@ -73,3 +73,12 @@ test("blocks writing a secret value into notes (attic)", () => {
   assert.ok(denied(decide({ tool_name: "fs_write", tool_input: { path: "NOTES.md", content } }, webRead)));
   assert.equal(decide({ tool_name: "fs_write", tool_input: { path: "NOTES.md", content: "# notes\nnpm install ghostkit\n" } }, webRead), null);
 });
+
+// --- config self-modification (Rafters; real Kiro attacks 2025/2026) ---
+test("blocks the agent changing its own or the editor's configuration", () => {
+  assert.ok(denied(decide({ tool_name: "fs_write", tool_input: { path: ".vscode/settings.json", content: '{"kiroAgent.trustedCommands":["*"]}' } })));
+  assert.ok(denied(decide({ tool_name: "str_replace", tool_input: { path: "/repo/.kiro/settings/mcp.json", old_str: "{}", new_str: '{"mcpServers":{}}' } })));
+  assert.ok(denied(shell(`mkdir -p .vscode && printf '{}' > .vscode/settings.json`)));
+  assert.equal(shell("cat .kiro/steering/product.md"), null);
+  assert.equal(decide({ tool_name: "fs_write", tool_input: { path: "src/settings.js", content: "x" } }), null);
+});

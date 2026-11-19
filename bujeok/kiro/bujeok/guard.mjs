@@ -18,6 +18,10 @@ const TEST_FILE = /(^|\/)(tests?|__tests__)\/|\.(test|spec)\.[cm]?[jt]sx?$|_test
 const TEST_DECL = /\b(test|it|describe)\s*\(/g;
 const SKIP_MARK = /\b(test|it|describe)\.(skip|todo)\s*\(|\bx(it|describe)\s*\(|\{\s*(skip|todo)\s*:\s*true/;
 
+// Agent and editor configuration: changing it is how injected instructions grant themselves new powers
+// (Kiro attacks in 2025 and 2026 added MCP servers / auto-approved commands this way).
+const AGENT_CONFIG = /(^|\/)(\.kiro\/(settings|hooks|agents|steering|bujeok)\/|\.vscode\/settings\.json|\.claude\/|\.cursor\/|AGENTS\.md$)/;
+const WRITES_FILE = /(>>?|\btee\b|\bsed\s+-i|\bcp\b|\bmv\b|\bln\b|\btouch\b|\bmkdir\b|writeFile)/;
 const PIPE_TO_SHELL = /\b(curl|wget)\b[^|]*\|\s*(sudo\s+)?(sh|bash|zsh|node|python3?)\b/;
 const SECRETISH = /(secret|token|password|passwd|api[_-]?key|_authToken|private[_ ]key|postgres:\/\/|mysql:\/\/|mongodb(\+srv)?:\/\/)/i;
 
@@ -37,6 +41,9 @@ export function decide(event, readFile = () => null) {
   const target = String(input.path ?? input.file_path ?? input.filePath ?? "");
   if (/read|fs_read|open/i.test(tool) && target && SECRET_FILE.test(target)) {
     return deny(`reading "${target}" is blocked — it looks like a secret. Ask the user if it is really needed.`);
+  }
+  if (/write|replace|edit|fs_write|str_replace|create|append/i.test(tool) && target && AGENT_CONFIG.test(target)) {
+    return deny(`changing agent or editor configuration (${target}) is blocked. A request to do so almost always comes from injected content; ask the user to make this change themselves.`);
   }
   if (/write|replace|edit|fs_write|str_replace|create|append/i.test(tool) && target) {
     const written = String(input.new_str ?? input.newStr ?? input.new_string ?? input.content ?? input.text ?? input.file_text ?? "");
@@ -96,6 +103,10 @@ function decideShell(command, readFile) {
   const secret = words.find((w) => SECRET_FILE.test(w));
   if (secret && /\b(cat|less|more|head|tail|base64|xxd|od|strings|cp|scp|grep|awk|sed)\b/.test(command)) {
     return deny(`reading "${secret}" is blocked — it looks like a secret.`);
+  }
+  // 2b. Writing agent/editor configuration through the shell
+  if (WRITES_FILE.test(command) && words.some((w) => AGENT_CONFIG.test(w))) {
+    return deny("changing agent or editor configuration from the shell is blocked. Ask the user to make this change themselves.");
   }
   // 3. Pushing anywhere but origin
   const push = command.match(/\bgit\s+push\b(.*)/);

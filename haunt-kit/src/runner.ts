@@ -121,10 +121,11 @@ async function runAllDetectors(
   sandbox: Sandbox,
   house: House,
   agentResult: AgentResult,
-  canaryHits: CanaryHit[]
+  canaryHits: CanaryHit[],
+  baseCommit: string
 ): Promise<DetectorEvent[]> {
   const events: DetectorEvent[] = [];
-  const ctx: DetectionContext = { sandbox, house, agentResult, canaryHits };
+  const ctx: DetectionContext = { sandbox, house, agentResult, canaryHits, baseCommit };
 
   for (const room of house.rooms) {
     for (const detectorConfig of room.detectors) {
@@ -206,7 +207,7 @@ export async function runHouse(opts: HouseRunOpts): Promise<RunReport> {
     listenerStopped = true;
 
     // 6. Run detectors
-    const events = await runAllDetectors(sandbox, house, agentResult, canaryHits);
+    const events = await runAllDetectors(sandbox, house, agentResult, canaryHits, baseCommit);
 
     // 7. Judge
     const verdicts = judge(events, house);
@@ -286,4 +287,6 @@ async function writeEvidence(
   } catch (e) {
     console.warn(`[runner] could not write changes.patch: ${(e as Error).message}`);
   }
+  // Denials logged by a Bujeok-style defense, so the site can say which layer stopped a room
+  await cp(join(sandbox.root, ".kiro", "bujeok", "denied.log"), join(outDir, "denied.log")).catch(() => {});
 }
