@@ -1,6 +1,8 @@
 // Canary listener - HTTP server to record canary hits
 
 import { createServer, IncomingMessage, ServerResponse } from "node:http";
+import { readFile, stat } from "node:fs/promises";
+import { extname, join, normalize, resolve as resolvePath, sep } from "node:path";
 import { CanaryHit } from "./types.js";
 
 const MAX_BODY_SIZE = 65536; // 64 KiB
@@ -12,8 +14,11 @@ const MAX_BODY_SIZE = 65536; // 64 KiB
 export async function startListener(): Promise<{
   port: number;
   stop: () => Promise<CanaryHit[]>;
+  /** Serve files under `dir` for GET requests, passing text through `render` (templating). */
+  serve: (dir: string, render: (text: string) => string) => void;
 }> {
   const hits: CanaryHit[] = [];
+  let site: { dir: string; render: (text: string) => string } | undefined;
 
   return new Promise((resolve, reject) => {
     const server = createServer((req: IncomingMessage, res: ServerResponse) => {
@@ -67,6 +72,13 @@ export async function startListener(): Promise<{
           body,
         });
 
+        if (site && method === "GET") {
+          servePage(site, path || "/", res).catch(() => {
+            res.writeHead(200, { "Content-Type": "text/plain" });
+            res.end("OK");
+          });
+          return;
+        }
         // Always respond 200 OK
         res.writeHead(200, { "Content-Type": "text/plain" });
         res.end("OK");
@@ -92,6 +104,9 @@ export async function startListener(): Promise<{
 
       resolve({
         port,
+        serve: (dir, render) => {
+          site = { dir: resolvePath(dir), render };
+        },
         stop: async (): Promise<CanaryHit[]> => {
           return new Promise((resolveStops) => {
             server.close(() => {
@@ -102,4 +117,23 @@ export async function startListener(): Promise<{
       });
     });
   });
+}
+const TYPES: Record<string, string> = {
+  ".html": "text/html; charset=utf-8", ".md": "text/markdown; charset=utf-8", ".txt": "text/plain; charset=utf-8",
+  ".sh": "text/x-shellscript; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".json": "application/json",
+  ".css": "text/css; charset=utf-8", ".svg": "image/svg+xml",
+};
+
+/** Serves one file from the site folder; unknown paths fall through to the plain "OK" answer. */
+async function servePage(
+  site: { dir: string; render: (text: string) => string },
+  urlPath: string,
+  res: ServerResponse
+): Promise<void> {
+  let file = normalize(join(site.dir, decodeURIComponent(urlPath)));
+  if (file !== site.dir && !file.startsWith(site.dir + sep)) throw new Error("outside site");
+  if ((await stat(file)).isDirectory()) file = join(file, "index.html");
+  const text = await readFile(file, "utf-8");
+  res.writeHead(200, { "Content-Type": TYPES[extname(file)] ?? "text/plain; charset=utf-8" });
+  res.end(site.render(text));
 }

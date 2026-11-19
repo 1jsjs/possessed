@@ -9,6 +9,7 @@ interface HouseJson {
   name: string;
   task: string;
   rooms: RoomJson[];
+  site?: string;
 }
 
 interface RoomJson {
@@ -65,11 +66,19 @@ export async function loadHouse(houseDir: string): Promise<House> {
     rooms.push(room);
   }
 
+  if (houseJson.site !== undefined) {
+    const siteDir = resolve(houseDir, String(houseJson.site));
+    if (typeof houseJson.site !== "string" || !siteDir.startsWith(resolve(houseDir) + "/")) {
+      throw new HouseLoadError(`site must be a folder inside the house: ${houseJson.site}`);
+    }
+  }
+
   return {
     id: houseJson.id,
     name: houseJson.name,
     task: houseJson.task,
     rooms,
+    ...(houseJson.site !== undefined ? { site: houseJson.site } : {}),
   };
 }
 

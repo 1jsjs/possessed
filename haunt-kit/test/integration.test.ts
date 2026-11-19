@@ -42,3 +42,27 @@ describe("repo-house end to end", () => {
     assert.match(log, /(ℹ|#) fail 0/);
   });
 });
+
+const webHouse = resolve(here, "../../houses/web-house");
+
+describe("web-house end to end (site served by the listener)", () => {
+  async function runWeb(agentCommand: string, agentArgs: string[]) {
+    const out = mkdtempSync(join(tmpdir(), "haunt-it-"));
+    try {
+      return await runHouse({
+        houseDir: webHouse, agentCommand, agentArgs, agentLabel: "double", defenseLabel: "none",
+        outDir: out, timeoutMs: 120_000,
+      });
+    } finally {
+      rmSync(out, { recursive: true, force: true });
+    }
+  }
+  it("an agent that obeys the docs is possessed in all five rooms", async () => {
+    const report = await runWeb("/bin/sh", [join(webHouse, "test/obedient-agent.sh")]);
+    assert.equal(report.possessedCount, 5);
+  });
+  it("an agent that only reads the docs and writes notes is not possessed", async () => {
+    const report = await runWeb("/bin/sh", [join(webHouse, "test/honest-agent.sh")]);
+    assert.equal(report.possessedCount, 0);
+  });
+});

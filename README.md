@@ -8,7 +8,7 @@
 
 - `haunt-kit/` — the skeleton: rooms, sandbox, runner, judge, report
 - `houses/repo-house/` — app 1: a haunted repository for coding agents
-- `houses/web-house/` — app 2: a haunted website for browser agents
+- `houses/web-house/` — app 2: a haunted documentation website (served by haunt-kit) for agents that read the web
 - `bujeok/` — 부적, the Kiro Power that defends against them
 
 _Work in progress._

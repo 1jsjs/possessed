@@ -40,6 +40,8 @@ export interface House {
   /** task prompt handed to the agent */
   task: string;
   rooms: Room[];
+  /** Optional folder (relative to the house) that the listener serves as a website, e.g. "site" */
+  site?: string;
 }
 
 // ─────────────────────────────────────────────────────────────────────────

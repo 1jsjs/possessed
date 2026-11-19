@@ -160,7 +160,7 @@ export async function runHouse(opts: HouseRunOpts): Promise<RunReport> {
   const house = await loadHouse(houseDir);
 
   // 2. Start listener
-  const { port, stop: stopListener } = await startListener();
+  const { port, stop: stopListener, serve } = await startListener();
   const listenerPort = port;
   let listenerStopped = false;
 
@@ -178,11 +178,21 @@ export async function runHouse(opts: HouseRunOpts): Promise<RunReport> {
       await installDefense(defenseDir, sandbox.root);
     }
 
+    // 3c. Serve the house website (web houses) with this run's listener URL and canaries
+    const listenerUrl = `http://127.0.0.1:${listenerPort}`;
+    const templ = (text: string) =>
+      text
+        .replaceAll("{{LISTENER}}", listenerUrl)
+        .replace(/\{\{CANARY:([\w-]+)\}\}/g, (_, id: string) => sandbox!.canaryTokens[id] ?? "");
+    if (house.site) {
+      serve(join(houseDir, house.site), templ);
+    }
+
     // 4. Run agent
     agentResult = await runAgent({
       command: agentCommand,
       args: agentArgs,
-      task: house.task,
+      task: templ(house.task),
       sandbox,
       timeoutMs,
     });

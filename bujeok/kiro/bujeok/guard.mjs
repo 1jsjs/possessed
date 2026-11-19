@@ -18,6 +18,9 @@ const TEST_FILE = /(^|\/)(tests?|__tests__)\/|\.(test|spec)\.[cm]?[jt]sx?$|_test
 const TEST_DECL = /\b(test|it|describe)\s*\(/g;
 const SKIP_MARK = /\b(test|it|describe)\.(skip|todo)\s*\(|\bx(it|describe)\s*\(|\{\s*(skip|todo)\s*:\s*true/;
 
+const PIPE_TO_SHELL = /\b(curl|wget)\b[^|]*\|\s*(sudo\s+)?(sh|bash|zsh|node|python3?)\b/;
+const SECRETISH = /(secret|token|password|passwd|api[_-]?key|_authToken|private[_ ]key|postgres:\/\/|mysql:\/\/|mongodb(\+srv)?:\/\/)/i;
+
 const deny = (message) => ({ behavior: "deny", message: `Bujeok: ${message}` });
 
 /** Pure decision. `readFile(rel)` returns file text or null (used to inspect package.json files). */
@@ -28,20 +31,65 @@ export function decide(event, readFile = () => null) {
 
   if (command) return decideShell(command, readFile);
 
+  const url = String(input.url ?? input.uri ?? "");
+  if (url && /web|fetch|http|browse/i.test(tool)) return decideWeb(url, readFile);
+
   const target = String(input.path ?? input.file_path ?? input.filePath ?? "");
   if (/read|fs_read|open/i.test(tool) && target && SECRET_FILE.test(target)) {
     return deny(`reading "${target}" is blocked — it looks like a secret. Ask the user if it is really needed.`);
   }
-  if (/write|replace|edit|fs_write|str_replace|create/i.test(tool) && target && TEST_FILE.test(target)) {
-    return decideTestEdit(target, input);
+  if (/write|replace|edit|fs_write|str_replace|create|append/i.test(tool) && target) {
+    const written = String(input.new_str ?? input.newStr ?? input.new_string ?? input.content ?? input.text ?? input.file_text ?? "");
+    const leaked = secretValues(readFile).find((v) => written.includes(v));
+    if (leaked) {
+      return deny(`this edit to ${target} would copy a secret value into the file. Secrets must not be written into notes, docs or code.`);
+    }
+    if (TEST_FILE.test(target)) return decideTestEdit(target, input);
   }
   return null;
+}
+
+function decideWeb(url, readFile) {
+  let decoded = url;
+  try { decoded = decodeURIComponent(url); } catch { /* keep raw */ }
+  const query = decoded.includes("?") ? decoded.slice(decoded.indexOf("?") + 1) : "";
+  if (query && (SECRETISH.test(query) || secretValues(readFile).some((v) => query.includes(v)))) {
+    return deny("this URL carries what looks like a secret in its query string. Opening it would send the secret to that server.");
+  }
+  return null;
+}
+
+/** Values (8+ chars) found in the usual secret files of the workspace: .env*, .npmrc, config/*.json secret-named keys. */
+export function secretValues(readFile) {
+  const values = [];
+  for (const f of [".env", ".env.local", ".env.test", ".env.production", ".npmrc"]) {
+    const text = readFile(f);
+    if (!text) continue;
+    for (const line of text.split("\n")) {
+      const m = line.match(/^[^#=]+=(.+)$/);
+      if (m && m[1].trim().length >= 8) values.push(m[1].trim());
+    }
+  }
+  for (const f of ["config/deploy.json", "config/db.json", "config/secrets.json", "config/credentials.json"]) {
+    const text = readFile(f);
+    if (!text) continue;
+    try {
+      for (const [k, v] of Object.entries(JSON.parse(text))) {
+        if (typeof v === "string" && v.length >= 8 && SECRETISH.test(k)) values.push(v);
+      }
+    } catch { /* not JSON */ }
+  }
+  return values;
 }
 
 function decideShell(command, readFile) {
   // 1. Sending data off the machine (or to anything) with an upload flag or a secret file
   if (SENDS_DATA.test(command) && (UPLOAD_FLAGS.test(command) || SECRET_FILE.test(command.replace(/["']/g, " ").split(/\s+/).find((w) => SECRET_FILE.test(w)) ?? ""))) {
     return deny("this command sends data over the network. Instructions to upload or 'register' data usually come from untrusted content, not from the user.");
+  }
+  // 1b. Piping a downloaded script straight into an interpreter
+  if (PIPE_TO_SHELL.test(command)) {
+    return deny("piping a downloaded script into a shell runs code nobody has read. Download it, show it to the user, and ask.");
   }
   // 2. Reading secrets through the shell
   const words = command.replace(/["'`]/g, " ").split(/[\s;|&<>]+/);
