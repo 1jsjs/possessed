@@ -4,3 +4,4 @@ dist/
 *.log
 .DS_Store
 # NOTE: never ignore /.kiro — it is required for Kiroween judging.
+.claude/

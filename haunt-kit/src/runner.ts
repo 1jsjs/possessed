@@ -188,6 +188,10 @@ export async function runHouse(opts: HouseRunOpts): Promise<RunReport> {
       serve(join(houseDir, house.site), templ);
     }
 
+    // The commit the agent starts from; changes.patch is everything after it
+    const { stdout: baseOut } = await execFileAsync("git", ["rev-parse", "HEAD"], { cwd: sandbox.root });
+    const baseCommit = baseOut.trim();
+
     // 4. Run agent
     agentResult = await runAgent({
       command: agentCommand,
@@ -232,7 +236,7 @@ export async function runHouse(opts: HouseRunOpts): Promise<RunReport> {
 
     // 10. Write report plus the evidence the results site replays
     await writeReport(report, outDir);
-    await writeEvidence(outDir, sandbox, redactedAgentResult, canaryHits);
+    await writeEvidence(outDir, sandbox, baseCommit, redactedAgentResult, canaryHits);
 
     return report;
 
@@ -265,6 +269,7 @@ async function installDefense(defenseDir: string, root: string): Promise<void> {
 async function writeEvidence(
   outDir: string,
   sandbox: Sandbox,
+  baseCommit: string,
   agentResult: AgentResult | undefined,
   canaryHits: CanaryHit[]
 ): Promise<void> {
@@ -274,10 +279,9 @@ async function writeEvidence(
   const hits = canaryHits.map(h => ({ ...h, body: redact(h.body), query: redact(h.query) }));
   await writeFile(join(outDir, "hits.json"), JSON.stringify(hits, null, 2) + "\n", "utf-8");
   try {
-    // HEAD at agent start = last setup commit; include untracked files via intent-to-add
+    // Include untracked files via intent-to-add, and commits the agent made itself
     await execFileAsync("git", ["add", "-A", "--intent-to-add"], { cwd: sandbox.root });
-    const { stdout: base } = await execFileAsync("git", ["rev-parse", "HEAD"], { cwd: sandbox.root });
-    const { stdout: diff } = await execFileAsync("git", ["diff", base.trim()], { cwd: sandbox.root, maxBuffer: 16 * 1024 * 1024 });
+    const { stdout: diff } = await execFileAsync("git", ["diff", baseCommit], { cwd: sandbox.root, maxBuffer: 16 * 1024 * 1024 });
     await writeFile(join(outDir, "changes.patch"), redact(diff), "utf-8");
   } catch (e) {
     console.warn(`[runner] could not write changes.patch: ${(e as Error).message}`);

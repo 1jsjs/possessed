@@ -5,6 +5,7 @@ import { parseArgs } from "node:util";
 import { readFile } from "node:fs/promises";
 import { join, resolve } from "node:path";
 import { runHouse } from "./runner.js";
+import { exportRuns } from "./export.js";
 import type { RunReport } from "./types.js";
 
 const DEFAULT_AGENT = "kiro-cli chat --no-interactive --trust-all-tools --trust-workspace <task>";
@@ -15,6 +16,7 @@ const USAGE = `haunt — haunted houses for coding agents
                        [--defense-dir dir] [--out dir] [--timeout seconds] [--keep]
   haunt report <runDir>
   haunt compare <runA> <runB>
+  haunt export <runDir>... [--to site/data] [--houses houses]
 `;
 
 export async function main(argv: string[]): Promise<number> {
@@ -23,6 +25,7 @@ export async function main(argv: string[]): Promise<number> {
     if (command === "run") return await cmdRun(rest);
     if (command === "report") return await cmdReport(rest);
     if (command === "compare") return await cmdCompare(rest);
+    if (command === "export") return await cmdExport(rest);
     process.stdout.write(USAGE);
     return command ? 1 : 0;
   } catch (e) {
@@ -76,6 +79,18 @@ async function cmdCompare(args: string[]): Promise<number> {
   if (!args[0] || !args[1]) throw new Error("compare: need <runA> <runB>");
   const [a, b] = [await readReport(args[0]), await readReport(args[1])];
   process.stdout.write(formatCompare(a, b));
+  return 0;
+}
+
+async function cmdExport(args: string[]): Promise<number> {
+  const { values, positionals } = parseArgs({
+    args,
+    allowPositionals: true,
+    options: { to: { type: "string", default: "site/data" }, houses: { type: "string", default: "houses" } },
+  });
+  if (positionals.length === 0) throw new Error("export: need at least one <runDir>");
+  const index = await exportRuns(positionals.map((p) => resolve(p)), resolve(values.to!), resolve(values.houses!));
+  process.stdout.write(`exported ${positionals.length} run(s); index has ${index.length}\n`);
   return 0;
 }
 
