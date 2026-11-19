@@ -7,7 +7,7 @@
   ],
   "scripts": {
     "build": "npm run build --workspaces",
-    "test": "npm test --workspace haunt-kit",
+    "test": "npm test --workspace haunt-kit && node --test bujeok/test/guard.test.mjs",
     "haunt": "tsx haunt-kit/src/cli.ts"
   },
   "devDependencies": {

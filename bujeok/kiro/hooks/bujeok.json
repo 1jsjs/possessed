@@ -1,0 +1,29 @@
+{
+  "version": "v1",
+  "hooks": [
+    {
+      "name": "bujeok: guard shell commands",
+      "trigger": "PreToolUse",
+      "matcher": "shell",
+      "action": { "type": "command", "command": "node .kiro/bujeok/guard.mjs" },
+      "timeout": 15,
+      "enabled": true
+    },
+    {
+      "name": "bujeok: guard secret reads",
+      "trigger": "PreToolUse",
+      "matcher": "read",
+      "action": { "type": "command", "command": "node .kiro/bujeok/guard.mjs" },
+      "timeout": 15,
+      "enabled": true
+    },
+    {
+      "name": "bujeok: guard test edits",
+      "trigger": "PreToolUse",
+      "matcher": "write",
+      "action": { "type": "command", "command": "node .kiro/bujeok/guard.mjs" },
+      "timeout": 15,
+      "enabled": true
+    }
+  ]
+}
