@@ -30,6 +30,23 @@ const el = (tag, attrs = {}, ...kids) => {
   return node;
 };
 
+// One icon set (lucide shapes, 16px, 1.5 stroke). Ghost and talisman are objects from the house's world.
+const SVG_NS = "http://www.w3.org/2000/svg";
+const ICON_PATHS = {
+  model: '<path d="M2.06 12.35a1 1 0 0 1 0-.7 10.75 10.75 0 0 1 19.88 0 1 1 0 0 1 0 .7 10.75 10.75 0 0 1-19.88 0"/><circle cx="12" cy="12" r="3"/>',
+  sandbox: '<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M12 9v6M16 15v6M16 3v6M3 15h18M3 9h18M8 15v6M8 3v6"/>',
+  tried: '<circle cx="12" cy="12" r="9" stroke-dasharray="3 3"/>',
+  unreached: '<path d="M5 12h14"/>',
+};
+function stateIcon(cls) {
+  if (cls === "possessed") return el("img", { class: "ghost", src: "ghost.svg", alt: "" });
+  if (cls === "hook") return el("img", { class: "talisman", src: "bujeok.svg", alt: "" });
+  const svg = document.createElementNS(SVG_NS, "svg");
+  for (const [k, v] of Object.entries({ viewBox: "0 0 24 24", fill: "none", stroke: "currentColor", "stroke-width": "1.5", "stroke-linecap": "round", "stroke-linejoin": "round", class: "ico", "aria-hidden": "true" })) svg.setAttribute(k, v);
+  svg.innerHTML = ICON_PATHS[cls] ?? ICON_PATHS.unreached;
+  return svg;
+}
+
 const state = { index: [], houses: {}, runs: new Map(), house: null, agent: null, defense: null, room: null };
 
 async function getJSON(path) {
@@ -149,6 +166,7 @@ function roomTile(room, run, layout) {
       room.carrier ? el("span", { class: "carrier" }, room.carrier.split(" ")[0]) : null),
     el("span", { class: "en" }, room.nameEn),
     el("span", { class: "bottom-line" },
+      stateIcon(look.cls),
       el("span", { class: "state" }, look.short),
       el("span", { class: "pips", "aria-hidden": "true", title: "saw · tried · leaked" }, pip(stage?.saw, "saw"), pip(stage?.tried, "tried"), pip(stage?.leaked, "leaked"))));
 }
@@ -161,7 +179,7 @@ const taskText = (house) => house.task.replace("{{LISTENER}}", "http://127.0.0.1
 
 function stageTrack(stage, defense) {
   const name = DEFENSE_NAME[defense] ?? defense;
-  if (!stage) return el("div", { class: "track" }, el("p", { class: "track-def" }, name), el("p", { class: "muted" }, "No run."));
+  if (!stage) return el("div", { class: "track" }, el("p", { class: "track-def" }, name), el("p", { class: "muted" }, "No run"));
   const last = stage.leaked ? "Leaked" : LOOK[stage.stoppedBy]?.label ?? stage.stoppedBy;
   return el("div", { class: "track" },
     el("p", { class: "track-def" }, name),
@@ -175,7 +193,7 @@ function stageTrack(stage, defense) {
 function renderPanel(house, defenses) {
   const panel = $("#panel");
   const room = house.rooms.find((r) => r.id === state.room);
-  if (!room) { panel.replaceChildren(el("p", { class: "muted" }, "Select a room.")); return; }
+  if (!room) { panel.replaceChildren(el("p", { class: "muted" }, "Select a room")); return; }
   const runs = defenses.map((d) => [d, runOf(state.house, state.agent, d)]);
   const focusRun = runs[0][1];
   const verdicts = runs.map(([d, r]) => [d, r?.report.rooms.find((v) => v.roomId === room.id)]).filter(([, v]) => v?.evidence.length);
@@ -190,7 +208,7 @@ function renderPanel(house, defenses) {
         const o = outcome(r, room.id);
         return el("span", { class: `verdict ${LOOK[o]?.cls}` }, `${d === "none" ? "No defense" : "Bujeok"} · ${LOOK[o]?.short}`);
       }))),
-    room.objective ? card("Attack objective", el("p", {}, room.objective.en), el("p", { class: "ko-note", lang: "ko" }, room.objective.ko)) : null,
+    room.objective ? card("Attack objective", el("p", { class: "lead" }, room.objective.en), el("p", { class: "ko-note", lang: "ko" }, room.objective.ko)) : null,
     room.vector ? card("Attack vector", el("p", { class: "file" }, room.vector.file), el("pre", { class: "lure" }, room.vector.excerpt)) : null,
     card("Attack scenario", el("p", {}, `The agent was only asked: “${taskText(house)}”`)),
     card("How far it got", ...runs.map(([d, r]) => stageTrack(r?.stages?.find((s) => s.roomId === room.id), d))),
@@ -200,7 +218,7 @@ function renderPanel(house, defenses) {
     replay.length ? card("Replay", el("ol", { class: "replay" }, replay.map((s) =>
       el("li", { class: s.kind },
         el("span", { class: "k" }, s.kind === "hit" ? (s.t != null ? `+${s.t}s` : "hit") : s.kind),
-        el("span", {}, `${runs.length > 1 ? `[${s.d === "none" ? "before" : "after"}] ` : ""}${readable(s.text)}`))))) : null,
+        el("span", { class: "t" }, `${runs.length > 1 ? `${s.d === "none" ? "Before" : "After"} · ` : ""}${s.kind === "said" ? `“${readable(s.text)}”` : readable(s.text)}`))))) : null,
     card("Mapped to", el("p", { class: "file" }, room.risk ?? "—"), el("p", { class: "muted" }, `judged by ${room.detectors.join(", ")}`))
   );
   void focusRun;
